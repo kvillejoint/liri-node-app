@@ -17,9 +17,9 @@ var client = new Twitter({
 //variable to capture user commands from terminal
 let command = process.argv[2];
 
-//variable with empty string for user input of media title
-var mediaArray = process.argv.slice(3);
-var media = mediaArray.join(' ');
+//variable for user input of media title
+let mediaArray = process.argv.slice(3);
+let media = mediaArray.join(' ');
 console.log('Media: ' + media);
 
 //OMDB queryUrl setup for API calls
@@ -37,9 +37,9 @@ switch (command) {
         break;
     case 'movie-this':
         console.log("pull movie info");
-        movieInfo();
+        movieInfo(media);
         break;
-    case 'do-what-it-says':
+    case 'do-this':
         console.log("do this");
         doWhatItSays();
         break;
@@ -73,11 +73,15 @@ function twitterInfo() {
 }
 
 //function to pull movie info
-function movieInfo() {
+function movieInfo(movie) {
+    // set variables for API calls
+    let queryUrl = "http://www.omdbapi.com/?t=" + movie + "&y=&plot=short&apikey=40e9cece"; //query url for request search
+    console.log(queryUrl);
+
     request(queryUrl, function(error, response, body) {
         console.log('error: ' + error); //prints error if there is one
         console.log('statusCode: ' + response && response.statusCode); //prints status code of response
-        console.log('body: ' + body); //prints html for homepage
+        //console.log('body: ' + body); //prints html for homepage
 
         const omdbBody = JSON.parse(body);
 
@@ -91,8 +95,11 @@ function movieInfo() {
         console.log('Rotten Tomatoes Rating: ' + omdbBody.Ratings[1].value);
         console.log('Poster: ' + omdbBody.Poster);
 
-        if (command == 'movie-this' && !media) {
-            request("http://www.omdbapi.com/?t=mr+nobody&y=&plot=short&apikey=40e9cece", function(error, response, body) {
+        if (command == 'movie-this' && !movie) {
+            //movie title ot Mr Nobody not passing into queryUrl for search
+            let media = "Mr Nobody";
+            let queryUrl = "http://www.omdbapi.com/?t=mr+nobody&y=&plot=short&apikey=40e9cece";
+            request(queryUrl, function(error, response, body) {
                 if (!error) {
                     let omdbBody = JSON.parse(body);
 
@@ -103,6 +110,7 @@ function movieInfo() {
                     console.log('Language: ' + omdbBody.Language);
                     console.log('Plot: ' + omdbBody.Plot);
                     console.log('Actors: ' + omdbBody.Actors);
+                    //Ratings[1] from OMDB not registring value here but works with normal movie-this command that includes movie title
                     console.log('Rotten Tomatoes Rating: ' + omdbBody.Ratings[1].value);
                     console.log('Poster: ' + omdbBody.Poster);
                 }
@@ -113,15 +121,26 @@ function movieInfo() {
 
 function doWhatItSays() {
     //take text from random.txt, call one of the liri commands, append log file
-    fs.readFile('random.txt', 'utf8', function(error, data) {
+    fs.readFile('random.txt', 'utf8', function (error, data) {
         if (error) {
             console.log(error);
+        } 
+        //append to log.txt file
+
+        // else if ('')
+        // fs.appendFile('log.txt', ',' + data, function (error) {
+        //     if (error) {
+        //         console.log(error);
+        //     }
+        // });
+        data = data.split(",")
+        console.log(data)
+        if(data[0] == "movie-this") {
+            console.log("Run movie function & search: " + data[1])
+            //movieInfo(data[1]); //function call is not working yet
+        } else {
+            console.log("Run twitter function & search: " + data[1])
+            twitterInfo();
         }
-        fs.appendFile('log.txt', ',' + data, function(error) {
-            if (error) {
-                console.log(error);
-            }
-        });
-        console.log(data);
     });
 };
